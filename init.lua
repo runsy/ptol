@@ -106,7 +106,6 @@ function ptol.remove_warning(player)
 end
 
 local timer = 0
-local down_timer = 0
 
 minetest.register_globalstep(function(dtime)
 	timer = timer + dtime

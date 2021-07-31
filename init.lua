@@ -14,6 +14,7 @@ local static_spawnpoint = minetest.setting_get_pos("static_spawnpoint")
 --Settings
 
 local settings = Settings(modpath .. "/ptol.conf")
+ptol.settings.shape = settings:get("shape") or "box"
 ptol.settings.radius = tonumber(settings:get("radius")) or 120
 ptol.settings.world_center = minetest.string_to_pos(settings:get("world_center")) or static_spawnpoint or {x=0, y=0, z=0}
 ptol.settings.allowed_angle = tonumber(settings:get("allowed_angle")) or 45
@@ -29,6 +30,28 @@ local function player_inside_sphere(player_pos, ptol_level)
 	--minetest.chat_send_all(tostring(ptol_level))
 	if (ptol.settings.radius * ptol_level) >= distance_to_center then
 		return true
+	else
+		return false
+	end
+end
+
+local function player_inside_box(player_pos, ptol_level)
+	player_pos.y = player_pos.y - 1
+	local radius = ptol.settings.radius * ptol_level
+	local p1 = {
+		x = ptol.settings.world_center.x - radius,
+		y = ptol.settings.world_center.y - radius,
+		z = ptol.settings.world_center.z - radius,
+	}
+	local p2 = {
+		x = ptol.settings.world_center.x + radius,
+		y = ptol.settings.world_center.y + radius,
+		z = ptol.settings.world_center.z + radius,
+	}
+	if (p1.x <= player_pos.x) and (player_pos.x <= p2.x)
+		and (p1.y <= player_pos.y) and (player_pos.y <= p2.y)
+			and (p1.z <= player_pos.z) and (player_pos.z <= p2.z) then
+				return true
 	else
 		return false
 	end
@@ -121,7 +144,13 @@ minetest.register_globalstep(function(dtime)
 			ptol_level = 1
 		end
 		--minetest.chat_send_all(tostring(ptol_level))
-		if not player_inside_sphere(player_pos, ptol_level) then
+		local player_inside
+		if ptol.settings.shape == "sphere" then
+			player_inside = player_inside_sphere(player_pos, ptol_level)
+		else
+			player_inside = player_inside_box(player_pos, ptol_level)
+		end
+		if not player_inside then
 			local dir_to_center = vector.direction(player_pos, ptol.settings.world_center)
 			local player_dir = player:get_look_dir()
 			local angle_to_center = math.deg(vector.angle(dir_to_center, player_dir))

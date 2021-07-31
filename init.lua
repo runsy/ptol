@@ -106,13 +106,15 @@ function ptol.remove_warning(player)
 end
 
 local timer = 0
+local down_timer = 0
 
 minetest.register_globalstep(function(dtime)
 	timer = timer + dtime
 	if timer <= ptol.settings.time then
 		return
+	else
+		timer = 0
 	end
-	timer = 0
 	for _, player in pairs(minetest.get_connected_players()) do
 		local player_pos = player:get_pos()
 		local ptol_level = player:get_meta():get_int("ptol:level")
@@ -127,12 +129,17 @@ minetest.register_globalstep(function(dtime)
 			--minetest.chat_send_all(tostring(angle_to_center))
 			local frozen = ptol.is_frozen(player)
 			--minetest.chat_send_all(tostring(angle_to_center)..":"..tostring(ptol.settings.allowed_angle))
-			if not(frozen) and (angle_to_center > ptol.settings.allowed_angle) then
+			local controls = player:get_player_control()
+			local not_allowed_control = false
+			if controls["down"] or controls["right"] or controls["left"] then
+				not_allowed_control = true
+			end
+			if not(frozen) and ((angle_to_center > ptol.settings.allowed_angle) or not_allowed_control) then
 				ptol.freeze(player)
 				ptol.show_warning(player)
 				minetest.sound_play("ptol_warning", {to_player = player:get_player_name(), gain = 1.0, max_hear_distance = 10,})
 				--minetest.chat_send_all("freeze")
-			elseif frozen and ((angle_to_center <= ptol.settings.allowed_angle)) then
+			elseif frozen and (angle_to_center <= ptol.settings.allowed_angle) and not(not_allowed_control) then
 				ptol.unfreeze(player)
 				ptol.remove_warning(player)
 				--minetest.chat_send_all("unfreeze")

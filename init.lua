@@ -137,7 +137,7 @@ function ptol.remove_warning(player)
 	player:hud_remove(ptol.warnings[player:get_player_name()])
 end
 
-minetest.register_on_joinplayer(function(player)
+minetest.register_on_leaveplayer(function(player)
 	if ptol.is_frozen(player) then
 		ptol.unfreeze(player)
 	end

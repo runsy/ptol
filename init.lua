@@ -98,6 +98,8 @@ function ptol.freeze(player)
 	end
 	local obj = minetest.add_entity(player:get_pos(), "ptol:freeze")
 	obj:get_luaentity():set_frozen_player(player)
+	ptol.show_warning(player)
+	minetest.sound_play("ptol_warning", {to_player = player:get_player_name(), gain = 1.0, max_hear_distance = 10,})
 end
 
 function ptol.unfreeze(player)
@@ -110,6 +112,7 @@ function ptol.unfreeze(player)
 			objects[i]:remove()
 		end
 	end
+	ptol.remove_warning(player)
 end
 
 function ptol.show_warning(player)
@@ -127,6 +130,12 @@ end
 function ptol.remove_warning(player)
 	player:hud_remove(ptol.warnings[player:get_player_name()])
 end
+
+minetest.register_on_joinplayer(function(player)
+	if ptol.is_frozen(player) then
+		ptol.unfreeze(player)
+	end
+end)
 
 local timer = 0
 
@@ -150,12 +159,12 @@ minetest.register_globalstep(function(dtime)
 		else
 			player_inside = player_inside_box(player_pos, ptol_level)
 		end
+		local frozen = ptol.is_frozen(player)
 		if not player_inside then
 			local dir_to_center = vector.direction(player_pos, ptol.settings.world_center)
 			local player_dir = player:get_look_dir()
 			local angle_to_center = math.deg(vector.angle(dir_to_center, player_dir))
 			--minetest.chat_send_all(tostring(angle_to_center))
-			local frozen = ptol.is_frozen(player)
 			--minetest.chat_send_all(tostring(angle_to_center)..":"..tostring(ptol.settings.allowed_angle))
 			local controls = player:get_player_control()
 			local not_allowed_control = false
@@ -164,13 +173,14 @@ minetest.register_globalstep(function(dtime)
 			end
 			if not(frozen) and ((angle_to_center > ptol.settings.allowed_angle) or not_allowed_control) then
 				ptol.freeze(player)
-				ptol.show_warning(player)
-				minetest.sound_play("ptol_warning", {to_player = player:get_player_name(), gain = 1.0, max_hear_distance = 10,})
 				--minetest.chat_send_all("freeze")
 			elseif frozen and (angle_to_center <= ptol.settings.allowed_angle) and not(not_allowed_control) then
 				ptol.unfreeze(player)
-				ptol.remove_warning(player)
 				--minetest.chat_send_all("unfreeze")
+			end
+		else
+			if frozen then
+				ptol.unfreeze(player)
 			end
 		end
 	end

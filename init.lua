@@ -82,6 +82,12 @@ minetest.register_entity("ptol:freeze", {
 		end
 	end,
 
+	on_activate = function(self, staticdata, dtime_s) --on_activate, required
+		if dtime_s > 0 then --loaded, nor new
+			self.object:remove()
+		end
+	end,
+
 	set_frozen_player = function(self, player)
 		self.pname = player:get_player_name()
 		player:set_attach(self.object, "", {x = 0, y = 0, z = 0 }, { x = 0, y = 0, z = 0 })

@@ -91,11 +91,11 @@ minetest.register_entity("ptol:freeze", {
 	set_frozen_player = function(self, player)
 		self.pname = player:get_player_name()
 		player:set_attach(self.object, "", {x = 0, y = 0, z = 0 }, { x = 0, y = 0, z = 0 })
+		ptol.players[self.pname] = self.object
 	end,
 })
 
 function ptol.freeze(player)
-	ptol.players[player:get_player_name()] = true
 	local parent = player:get_attach()
 	if parent and parent:get_luaentity() and
 			parent:get_luaentity().set_frozen_player then
@@ -109,15 +109,9 @@ function ptol.freeze(player)
 end
 
 function ptol.unfreeze(player)
-	ptol.players[player:get_player_name()] = nil
-	local pname = player:get_player_name()
-	local objects = minetest.get_objects_inside_radius(player:get_pos(), 2)
-	for i=1, #objects do
-		local entity = objects[i]:get_luaentity()
-		if entity and entity.set_frozen_player and entity.pname == pname then
-			objects[i]:remove()
-		end
-	end
+	local player_name = player:get_player_name()
+	ptol.players[player_name]:remove()
+	ptol.players[player_name] = nil
 	ptol.remove_warning(player)
 end
 

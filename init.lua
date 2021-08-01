@@ -110,8 +110,8 @@ end
 
 function ptol.unfreeze(player)
 	local player_name = player:get_player_name()
-	ptol.players[player_name]:remove()
-	ptol.players[player_name] = nil
+	ptol.players[player_name]:remove() --remove the entity
+	ptol.players[player_name] = nil --remove the player registry
 	ptol.remove_warning(player)
 end
 
